@@ -1,7 +1,7 @@
 from .propagators import Conditional, Cascade, PointMutation, MateUniform, SelectBest, SelectUniform, InitUniform, IntervalMutationNormal
 from .population import Individual
 
-def get_default_propagator(pop_size, limits, mate_prob, mut_prob, random_prob, sigma_factor=0.05):
+def get_default_propagator(pop_size, limits, mate_prob, mut_prob, random_prob, sigma_factor=0.05, rng=None):
     """
     Get propulate's default propagator.
 
@@ -19,27 +19,21 @@ def get_default_propagator(pop_size, limits, mate_prob, mut_prob, random_prob, s
                   random-initialization probability
     sigma_factor : float
                    scaling factor for obtaining std from search-space boundaries for interval mutation
+    rng : random.Random()
+          random number generator
     """
     propagator = Cascade( # Compose propagator out of basic evolutionary operators with Cascade(...).
             [
                 SelectBest(pop_size),
-                SelectUniform(2),
-                MateUniform(mate_prob),
-                PointMutation(limits, probability=mut_prob),
-                IntervalMutationNormal(limits, sigma_factor=sigma_factor, probability=1),
-                InitUniform(limits, parents=1, probability=random_prob), # TODO this should be put in a "forked" propagator?
+                SelectUniform(2, rng=rng),
+                MateUniform(mate_prob, rng=rng),
+                PointMutation(limits, probability=mut_prob, rng=rng),
+                IntervalMutationNormal(limits, sigma_factor=sigma_factor, probability=1, rng=rng),
+                InitUniform(limits, parents=1, probability=random_prob, rng=rng), # TODO this should be put in a "forked" propagator?
             ]
         )
 
-    init = InitUniform(limits)
+    init = InitUniform(limits, rng=rng)
 
     propagator = Conditional(pop_size, propagator, init) # Initialize random if current population size < specified `pop_size`.
     return propagator
-
-def set_seed(seed=None):
-    """
-    Set MPI-rank specific random seed.
-    """
-    if seed is not None:
-        from mpi4py import MPI
-        random.seed(seed + MPI.COMM_WORLD.rank)
