@@ -1,5 +1,5 @@
 cycler==0.11.0
-deepdiff==5.8.0
+deepdiff==8.6.2
 kiwisolver==1.4.2
 matplotlib==3.2.1
 mpi4py==3.0.3
